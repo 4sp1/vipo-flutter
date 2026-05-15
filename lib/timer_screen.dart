@@ -38,6 +38,22 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        _handleBackground();
+        break;
+      case AppLifecycleState.resumed:
+        _handleForeground();
+        break;
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
+
   void _resetTimer() {
     _timer?.cancel();
     setState(() {
