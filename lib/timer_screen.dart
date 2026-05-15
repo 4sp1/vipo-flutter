@@ -13,12 +13,16 @@ class TimerScreen extends StatefulWidget {
   State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _TimerScreenState extends State<TimerScreen> {
+class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
   TimerMode _currentMode = TimerMode.work;
   int _remainingSeconds = 0;
   bool _isRunning = false;
   Timer? _timer;
   bool _isComplete = false;
+
+  // Background tracking
+  DateTime? _backgroundTimestamp;
+  int? _savedRemainingSeconds;
 
   @override
   void initState() {
