@@ -54,6 +54,12 @@ class _TimerScreenState extends State<TimerScreen> with WidgetsBindingObserver {
     }
   }
 
+  void _handleBackground() {
+    if (!_isRunning) return;
+    _backgroundTimestamp = DateTime.now();
+    _savedRemainingSeconds = _remainingSeconds;
+  }
+
   void _resetTimer() {
     _timer?.cancel();
     setState(() {
