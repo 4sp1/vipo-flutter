@@ -8,7 +8,7 @@ void main() async {
   // Initialize notifications
   final notifications = FlutterLocalNotificationsPlugin();
   await notifications.initialize(
-    const InitializationSettings(
+    settings: const InitializationSettings(
       iOS: DarwinInitializationSettings(),
       macOS: DarwinInitializationSettings(),
     ),

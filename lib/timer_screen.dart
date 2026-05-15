@@ -88,10 +88,10 @@ class _TimerScreenState extends State<TimerScreen> {
     // Notification
     final notifications = FlutterLocalNotificationsPlugin();
     await notifications.show(
-      0,
-      '${_currentMode.label} Complete',
-      'Time for ${_currentMode == TimerMode.work ? 'a break' : 'work'}!',
-      const NotificationDetails(
+      id: 0,
+      title: '${_currentMode.label} Complete',
+      body: 'Time for ${_currentMode == TimerMode.work ? 'a break' : 'work'}!',
+      notificationDetails: const NotificationDetails(
         iOS: DarwinNotificationDetails(),
         macOS: DarwinNotificationDetails(),
       ),
