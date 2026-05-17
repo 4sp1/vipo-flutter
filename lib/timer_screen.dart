@@ -81,7 +81,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
   Future<void> _triggerCompletion() async {
     // Vibration (iOS only - macOS doesn't support)
-    if (await Vibration.hasVibrator() ?? false) {
+    if (await Vibration.hasVibrator()) {
       Vibration.vibrate(duration: 500);
     }
 
