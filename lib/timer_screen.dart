@@ -111,25 +111,28 @@ class _TimerScreenState extends State<TimerScreen> {
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.systemBackground,
       child: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            DonutTimer(
-              remainingSeconds: _remainingSeconds,
-              totalSeconds: _currentMode.duration.inSeconds,
-              color: CupertinoDynamicColor.resolve(_currentMode.color, context),
-              onTap: _toggleTimer,
-              onLongPress: _resetTimer,
-              isRunning: _isRunning,
-            ),
-            const SizedBox(height: 48),
-            ModeSwitch(
-              currentMode: _currentMode,
-              onModeChanged: _changeMode,
-            ),
-            const Spacer(),
-          ],
+        child: SizedBox.expand(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Spacer(),
+              DonutTimer(
+                remainingSeconds: _remainingSeconds,
+                totalSeconds: _currentMode.duration.inSeconds,
+                color: CupertinoDynamicColor.resolve(
+                  _currentMode.color,
+                  context,
+                ),
+                onTap: _toggleTimer,
+                onLongPress: _resetTimer,
+                isRunning: _isRunning,
+              ),
+              const SizedBox(height: 48),
+              ModeSwitch(currentMode: _currentMode, onModeChanged: _changeMode),
+              const Spacer(),
+            ],
+          ),
         ),
       ),
     );
