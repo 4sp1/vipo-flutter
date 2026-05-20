@@ -40,13 +40,13 @@ class DonutTimer extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             CustomPaint(
-              size: const Size(280, 280),
-              painter: _DonutPainter(
-                progress: progress,
-                color: color,
-                strokeWidth: 12,
-              ),
-            )
+                  size: const Size(280, 280),
+                  painter: _DonutPainter(
+                    progress: progress,
+                    color: color,
+                    strokeWidth: 12,
+                  ),
+                )
                 .animate()
                 .fadeIn(duration: 300.ms)
                 .scale(begin: const Offset(0.95, 0.95), duration: 300.ms),
@@ -112,7 +112,7 @@ class _DonutPainter extends CustomPainter {
 
     // Background ring
     final bgPaint = Paint()
-      ..color = CupertinoColors.systemGrey.withOpacity(0.2)
+      ..color = CupertinoColors.systemGrey.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
