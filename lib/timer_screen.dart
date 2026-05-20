@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:vibration/vibration.dart';
 import 'models/timer_mode.dart';
 import 'widgets/donut_timer.dart';
 import 'widgets/mode_switch.dart';
+import 'notifications.dart' as notifications;
 
 class TimerScreen extends StatefulWidget {
   const TimerScreen({super.key});
@@ -23,6 +23,7 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   void initState() {
     super.initState();
+    notifications.show(title: 'hi', body: 'there');
     _resetTimer();
   }
 
@@ -86,15 +87,9 @@ class _TimerScreenState extends State<TimerScreen> {
     }
 
     // Notification
-    final notifications = FlutterLocalNotificationsPlugin();
     await notifications.show(
-      id: 0,
       title: '${_currentMode.label} Complete',
       body: 'Time for ${_currentMode == TimerMode.work ? 'a break' : 'work'}!',
-      notificationDetails: const NotificationDetails(
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
-      ),
     );
   }
 

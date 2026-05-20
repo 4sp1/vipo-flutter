@@ -1,18 +1,12 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'timer_screen.dart';
+import 'notifications.dart' as notifications;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize notifications
-  final notifications = FlutterLocalNotificationsPlugin();
-  await notifications.initialize(
-    settings: const InitializationSettings(
-      iOS: DarwinInitializationSettings(),
-      macOS: DarwinInitializationSettings(),
-    ),
-  );
+  await notifications.initialize();
 
   runApp(const VipoApp());
 }
@@ -25,9 +19,7 @@ class VipoApp extends StatelessWidget {
     return const CupertinoApp(
       title: 'Vipo',
       debugShowCheckedModeBanner: false,
-      theme: CupertinoThemeData(
-        brightness: Brightness.dark,
-      ),
+      theme: CupertinoThemeData(brightness: Brightness.dark),
       home: TimerScreen(),
     );
   }
