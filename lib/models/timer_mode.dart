@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 enum TimerMode {
   work(
-    duration: Duration(minutes: 25),
+    duration: Duration(minutes: 20),
     label: 'Work',
     color: CupertinoColors.systemRed,
   ),
