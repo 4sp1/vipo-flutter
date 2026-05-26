@@ -1,16 +1,36 @@
-# vipo
+# Vipo
 
-A new Flutter project.
+![vipo-flutter mascot](assets/icon/icon_flutter.png)
+
+**Donut style, work with a smile.**
+
+A minimalist Pomodoro-style timer built with Flutter.
+
+## Features
+
+- **Circular progress timer** - Visual donut-style countdown
+- **Three timer modes**:
+  - Work (20 min) - Red
+  - Short Break (5 min) - Green
+  - Long Break (15 min) - Blue
+- **Simple controls** - Tap to start/pause/resume, long-press to reset
+- **Notifications** - Get notified when your timer completes
+- **Dark theme** - Easy on the eyes with Cupertino styling
+- **Smooth animations** - Built with flutter_animate
+
+## Platforms
+
+- iOS
+- macOS
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Clone the repository
+2. Run `flutter pub get`
+3. Run `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
+## Dependencies
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `flutter_local_notifications` - Timer completion notifications
+- `vibration` - Haptic feedback
+- `flutter_animate` - Smooth UI animations
