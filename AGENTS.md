@@ -60,3 +60,40 @@ widgets/
 - Feature-level modules (like notifications) are standalone Dart files in `lib/`
 - No routing, no state management library — pure `StatefulWidget` + `setState`
 - Icon asset: `assets/icon/icon.png` (source) → generated via `flutter_launcher_icons`
+
+## Generated API Client (`lib/data/api/`)
+
+The typed dio HTTP client is generated from `tooling/openapi.json` (vipo-go tag
+`v1.0.0-api`) and lives under `lib/data/api/`. **Never hand-edit any file
+under `lib/data/api/`** except the hand-authored guard
+`.openapi-generator-ignore`. Re-run the generator instead.
+
+### Regenerate
+
+```bash
+./tooling/generate_api.sh
+```
+
+What the script does (in order):
+1. `openapi-generator generate -i tooling/openapi.json -g dart-dio` with
+   `serializationLibrary=json_serializable`, `dateLibrary=core`,
+   `pubName=vipo_api`, `pubLibrary=vipo.api` into a temp dir.
+2. Flattens `<tmp>/lib/*` into `lib/data/api/` (dart-dio always nests output
+   under `lib/`).
+3. Rewrites internal `package:vipo_api/` imports to `package:vipo/data/api/`
+   (no-op when the generator emits relative imports).
+4. Prepends `// ignore_for_file: type=lint` to every generated `.dart` so
+   `flutter analyze` stays warning-free.
+5. `flutter pub get` then `dart run build_runner build --delete-conflicting-outputs`
+   to produce the `*.g.dart` part files.
+
+### Prereqs (macOS)
+- `brew install openapi-generator` (needs a JDK)
+- Flutter on PATH (`flutter pub get` + `dart run build_runner`)
+
+### Configuring the API base URL
+- Default: `http://localhost:8080` (from `lib/data/api_config.dart`).
+- Override at launch: `flutter run --dart-define=API_BASE_URL=https://api.example`
+- Tests/services obtain the client via `buildApiClient()` in
+  `lib/data/api_client.dart`; never construct `VipoApi` directly with a
+  hard-coded base URL.
