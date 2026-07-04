@@ -1,0 +1,11 @@
+# Everything matching the patterns below is owned by tooling/generate_api.sh.
+# Do NOT hand-edit any file here. Re-run the generator instead.
+#
+# Patterns are relative to this file's location.
+api/**
+model/**
+src/**
+*.g.dart
+openapi.dart
+vipo_api.dart
+doc/**
