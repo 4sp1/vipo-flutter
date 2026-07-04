@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vipo/data/api/openapi.dart';
+import 'package:vipo/data/api/vipo_api.dart';
 import 'package:vipo/data/api_client.dart';
 import 'package:vipo/data/api_config.dart';
 
@@ -31,6 +31,6 @@ void main() {
 
   test('buildApiClient wires kApiBaseUrl into the client', () {
     final client = buildApiClient();
-    expect(client, isA<ApiClient>());
+    expect(client, isA<VipoApi>());
   });
 }
