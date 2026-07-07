@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:vibration/vibration.dart';
-import 'models/timer_mode.dart';
+import 'domain/models/timer_mode.dart';
 import 'widgets/donut_timer.dart';
 import 'widgets/mode_switch.dart';
 import 'notifications.dart' as notifications;
