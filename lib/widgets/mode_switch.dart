@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import '../models/timer_mode.dart';
+import '../domain/models/timer_mode.dart';
 
 class ModeSwitch extends StatelessWidget {
   const ModeSwitch({
