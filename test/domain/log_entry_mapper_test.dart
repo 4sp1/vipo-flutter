@@ -98,4 +98,43 @@ void main() {
       }
     });
   });
+
+  group('toCreateLogEntryRequest', () {
+    test('builds request from action and pomodoroState; omits id/createdAt/payload', () {
+      final domain = LogEntry(
+        id: '0',
+        pomodoroState: TimerMode.shortBreak,
+        action: LogAction.pause,
+        createdAt: DateTime.utc(2026, 1, 2, 10, 0, 0),
+      );
+      final req = toCreateLogEntryRequest(domain);
+      expect(req.action, api.LogAction.pause);
+      expect(req.session, api.PomodoroState.shortBreak);
+      expect(req.payload, isNull);
+    });
+
+    test('round-trips all six LogActions', () {
+      for (final action in LogAction.values) {
+        final domain = LogEntry(
+          id: '7',
+          pomodoroState: TimerMode.work,
+          action: action,
+          createdAt: ts,
+        );
+        expect(toCreateLogEntryRequest(domain).action.name, action.name);
+      }
+    });
+
+    test('round-trips all three TimerModes', () {
+      for (final mode in TimerMode.values) {
+        final domain = LogEntry(
+          id: '7',
+          pomodoroState: mode,
+          action: LogAction.start,
+          createdAt: ts,
+        );
+        expect(toCreateLogEntryRequest(domain).session, isA<api.PomodoroState>());
+      }
+    });
+  });
 }
