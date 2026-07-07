@@ -1,5 +1,6 @@
 import 'package:vipo/data/api/src/model/log_entry.dart' as api;
 import 'package:vipo/data/api/src/model/log_action.dart' as api;
+import 'package:vipo/data/api/src/model/create_log_entry_request.dart' as api;
 import 'package:vipo/domain/models/log_entry.dart';
 import 'package:vipo/domain/models/log_action.dart';
 import 'package:vipo/domain/mappers/pomodoro_state_mapper.dart';
@@ -62,5 +63,17 @@ api.LogEntry toApiLogEntry(LogEntry domainEntry) {
     session: toApiPomodoroState(domainEntry.pomodoroState),
     timestamp: domainEntry.createdAt,
     payload: null,
+  );
+}
+
+/// Builds the generated `CreateLogEntryRequest` from a domain `LogEntry`.
+///
+/// Only `action` and `session` are carried over — the server assigns `id`
+/// and `timestamp`, and `payload` is intentionally left `null`. Reuses the
+/// private `_toApiLogAction` helper defined above.
+api.CreateLogEntryRequest toCreateLogEntryRequest(LogEntry domainEntry) {
+  return api.CreateLogEntryRequest(
+    action: _toApiLogAction(domainEntry.action),
+    session: toApiPomodoroState(domainEntry.pomodoroState),
   );
 }
