@@ -1,6 +1,9 @@
 import 'package:vipo/data/api/src/model/note.dart' as api;
 import 'package:vipo/data/api/src/model/pomodoro_state.dart' as api;
+import 'package:vipo/data/api/src/model/create_note_request.dart' as api;
 import 'package:vipo/domain/models/note.dart';
+import 'package:vipo/domain/mappers/pomodoro_state_mapper.dart';
+import 'package:vipo/domain/models/timer_mode.dart';
 
 /// Converts the generated API `Note` into the domain `Note`.
 ///
@@ -29,5 +32,15 @@ api.Note toApiNote(
     note: domainNote.content,
     pomodoroState: pomodoroState,
     createdAt: domainNote.createdAt,
+  );
+}
+
+/// Builds the generated `CreateNoteRequest` from a domain `Note` plus the
+/// contextual timer-mode. Only `note` (domain content) and `pomodoroState`
+/// are carried over — the server assigns `id` and `createdAt`.
+api.CreateNoteRequest toCreateNoteRequest(Note domainNote, TimerMode pomodoroState) {
+  return api.CreateNoteRequest(
+    note: domainNote.content,
+    pomodoroState: toApiPomodoroState(pomodoroState),
   );
 }

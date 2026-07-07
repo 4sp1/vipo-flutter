@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vipo/data/api/src/model/note.dart' as api;
 import 'package:vipo/data/api/src/model/pomodoro_state.dart' as api;
 import 'package:vipo/domain/models/note.dart';
+import 'package:vipo/domain/models/timer_mode.dart';
 import 'package:vipo/domain/mappers/note_mapper.dart';
 
 void main() {
@@ -68,5 +69,26 @@ void main() {
     expect(back.note, 'world');
     expect(back.pomodoroState, api.PomodoroState.shortBreak);
     expect(back.createdAt, ts);
+  });
+
+  group('toCreateNoteRequest', () {
+    test('maps content and supplied pomodoroState; omits id/createdAt', () {
+      final domain = Note(id: '0', content: 'hello', createdAt: ts);
+      final req = toCreateNoteRequest(domain, TimerMode.shortBreak);
+      expect(req.note, 'hello');
+      expect(req.pomodoroState, api.PomodoroState.shortBreak);
+    });
+
+    test('round-trips all three TimerModes', () {
+      final domain = Note(id: '0', content: 'x', createdAt: ts);
+      const expected = <TimerMode, api.PomodoroState>{
+        TimerMode.work: api.PomodoroState.work,
+        TimerMode.shortBreak: api.PomodoroState.shortBreak,
+        TimerMode.longBreak: api.PomodoroState.longBreak,
+      };
+      for (final entry in expected.entries) {
+        expect(toCreateNoteRequest(domain, entry.key).pomodoroState, entry.value);
+      }
+    });
   });
 }
