@@ -23,7 +23,6 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   void initState() {
     super.initState();
-    notifications.show(title: 'hi', body: 'there');
     _resetTimer();
   }
 
