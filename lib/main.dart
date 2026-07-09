@@ -7,7 +7,7 @@ import 'package:vipo/di.dart';
 import 'package:vipo/notifications.dart' as notifications;
 import 'package:vipo/repositories/logs_repository.dart';
 import 'package:vipo/repositories/notes_repository.dart';
-import 'package:vipo/timer_screen.dart';
+import 'package:vipo/screens/timer_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

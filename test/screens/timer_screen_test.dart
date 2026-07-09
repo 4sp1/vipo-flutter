@@ -46,8 +46,8 @@ void main() {
 
   Widget _pumpSubject() {
     return CupertinoApp(
-      home: BlocProvider<TimerBloc>.value(
-        value: timerBloc,
+      home: BlocProvider<TimerBloc>(
+        create: (_) => timerBloc,
         child: const TimerScreen(),
       ),
     );
@@ -72,6 +72,7 @@ void main() {
     expect(timerBloc.state, isA<st.TimerInitial>());
 
     await tester.tap(find.byType(DonutTimer));
+    await tester.pump();
     await tester.pumpAndSettle();
 
     expect(timerBloc.state, isA<st.TimerRunInProgress>());
@@ -87,6 +88,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Short Break'));
+    await tester.pump();
     await tester.pumpAndSettle();
 
     expect(timerBloc.state, isA<st.TimerInitial>());
