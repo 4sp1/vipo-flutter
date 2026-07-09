@@ -8,7 +8,7 @@ void main() {
       (tester) async {
     final deps = AppDeps();
     await tester.pumpWidget(VipoApp(deps: deps));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(TimerScreen), findsOneWidget);
   });
 }
