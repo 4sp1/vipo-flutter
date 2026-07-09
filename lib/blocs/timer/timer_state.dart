@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:vipo/domain/models/timer_mode.dart';
 
-abstract class TimerState extends Equatable {
+sealed class TimerState extends Equatable {
   const TimerState();
 
   TimerMode get mode;
