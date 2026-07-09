@@ -18,7 +18,6 @@ class MockLogsRepository extends Mock implements LogsRepository {}
 void main() {
   late MockLogsRepository mockLogsRepository;
   late LogsBloc logsBloc;
-  late TimerBloc timerBloc;
 
   final fallbackEntry = LogEntry(
     id: '1',
@@ -36,18 +35,16 @@ void main() {
     when(() => mockLogsRepository.createLog(any()))
         .thenAnswer((_) async => Result.success(fallbackEntry));
     logsBloc = LogsBloc(mockLogsRepository);
-    timerBloc = TimerBloc(logsBloc);
   });
 
   tearDown(() async {
-    await timerBloc.close();
     await logsBloc.close();
   });
 
-  Widget _pumpSubject() {
+  Widget pumpSubject() {
     return CupertinoApp(
       home: BlocProvider<TimerBloc>(
-        create: (_) => timerBloc,
+        create: (_) => TimerBloc(logsBloc),
         child: const TimerScreen(),
       ),
     );
@@ -55,8 +52,8 @@ void main() {
 
   testWidgets('renders initial work countdown 20:00 and tap-to-start hint',
       (tester) async {
-    await tester.pumpWidget(_pumpSubject());
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(pumpSubject());
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('20:00'), findsOneWidget);
     expect(find.text('tap to start'), findsOneWidget);
@@ -66,34 +63,36 @@ void main() {
   testWidgets(
       'tapping the donut in the initial state dispatches TimerStarted '
       'and the bloc emits TimerRunInProgress', (tester) async {
-    await tester.pumpWidget(_pumpSubject());
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(pumpSubject());
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(timerBloc.state, isA<st.TimerInitial>());
+    final bloc = tester.element(find.byType(TimerScreen)).read<TimerBloc>();
+    expect(bloc.state, isA<st.TimerInitial>());
 
     await tester.tap(find.byType(DonutTimer));
     await tester.pump();
-    await tester.pumpAndSettle();
+    await tester.pump();
 
-    expect(timerBloc.state, isA<st.TimerRunInProgress>());
+    expect(bloc.state, isA<st.TimerRunInProgress>());
     expect(
-      (timerBloc.state as st.TimerRunInProgress).mode,
+      (bloc.state as st.TimerRunInProgress).mode,
       TimerMode.work,
     );
   });
 
   testWidgets('selecting Short Break dispatches TimerModeChanged '
       'and the bloc emits TimerInitial(shortBreak)', (tester) async {
-    await tester.pumpWidget(_pumpSubject());
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(pumpSubject());
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.text('Short Break'));
     await tester.pump();
-    await tester.pumpAndSettle();
+    await tester.pump();
 
-    expect(timerBloc.state, isA<st.TimerInitial>());
+    final bloc = tester.element(find.byType(TimerScreen)).read<TimerBloc>();
+    expect(bloc.state, isA<st.TimerInitial>());
     expect(
-      (timerBloc.state as st.TimerInitial).mode,
+      (bloc.state as st.TimerInitial).mode,
       TimerMode.shortBreak,
     );
     expect(find.text('05:00'), findsOneWidget);
