@@ -3,7 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 final notifications = FlutterLocalNotificationsPlugin();
 
 Future<void> initialize() async {
-  final initialized = await notifications.initialize(
+  await notifications.initialize(
     settings: const InitializationSettings(
       macOS: DarwinInitializationSettings(),
     ),
