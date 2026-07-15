@@ -8,7 +8,6 @@ Future<void> initialize() async {
       macOS: DarwinInitializationSettings(),
     ),
   );
-  print('Notification initialized: $initialized');
 
   final macosPlugin = notifications
       .resolvePlatformSpecificImplementation<
@@ -16,16 +15,14 @@ Future<void> initialize() async {
       >();
 
   if (macosPlugin == null) {
-    print('ERROR: macOS notification plugin not available');
     return;
   }
 
-  final granted = await macosPlugin.requestPermissions(
+  await macosPlugin.requestPermissions(
     alert: true,
     badge: true,
     sound: true,
   );
-  print('macOS notification permissions granted: $granted');
 
   await notifications
       .resolvePlatformSpecificImplementation<
@@ -53,8 +50,8 @@ Future<void> show({required String title, required String body}) async {
         ),
       ),
     );
-    print('Notification shown: $title - $body');
-  } catch (e) {
-    print('ERROR showing notification: $e');
+  } catch (_) {
+    // Silently ignore notification errors: notification failures must not
+    // affect the user's timer flow.
   }
 }
