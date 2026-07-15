@@ -6,6 +6,7 @@ import 'package:vipo/blocs/timer/timer_event.dart';
 import 'package:vipo/blocs/timer/timer_state.dart' as st;
 import 'package:vipo/domain/models/timer_mode.dart';
 import 'package:vipo/notifications.dart' as notifications;
+import 'package:vipo/screens/notes_screen.dart';
 import 'package:vipo/widgets/donut_timer.dart';
 import 'package:vipo/widgets/mode_switch.dart';
 
@@ -65,7 +66,21 @@ class TimerScreen extends StatelessWidget {
       },
       child: CupertinoPageScaffold(
         backgroundColor: CupertinoColors.systemBackground,
+        navigationBar: CupertinoNavigationBar(
+          trailing: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              Navigator.of(context).push(
+                CupertinoPageRoute<void>(
+                  builder: (_) => const NotesScreen(),
+                ),
+              );
+            },
+            child: const Icon(CupertinoIcons.list_bullet),
+          ),
+        ),
         child: SafeArea(
+          top: false,
           child: SizedBox.expand(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
