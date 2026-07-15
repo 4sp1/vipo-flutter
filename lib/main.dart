@@ -24,22 +24,22 @@ class VipoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoApp(
-      title: 'Vipo',
-      debugShowCheckedModeBanner: false,
-      theme: const CupertinoThemeData(brightness: Brightness.dark),
-      home: MultiRepositoryProvider(
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<LogsRepository>.value(value: deps.logsRepository),
+        RepositoryProvider<NotesRepository>.value(value: deps.notesRepository),
+      ],
+      child: MultiBlocProvider(
         providers: [
-          RepositoryProvider<LogsRepository>.value(value: deps.logsRepository),
-          RepositoryProvider<NotesRepository>.value(value: deps.notesRepository),
+          BlocProvider<LogsBloc>(create: (_) => deps.logsBloc),
+          BlocProvider<TimerBloc>(create: (_) => deps.timerBloc),
+          BlocProvider<NotesBloc>(create: (_) => deps.notesBloc),
         ],
-        child: MultiBlocProvider(
-          providers: [
-            BlocProvider<LogsBloc>(create: (_) => deps.logsBloc),
-            BlocProvider<TimerBloc>(create: (_) => deps.timerBloc),
-            BlocProvider<NotesBloc>(create: (_) => deps.notesBloc),
-          ],
-          child: const TimerScreen(),
+        child: CupertinoApp(
+          title: 'Vipo',
+          debugShowCheckedModeBanner: false,
+          theme: const CupertinoThemeData(brightness: Brightness.dark),
+          home: const TimerScreen(),
         ),
       ),
     );
