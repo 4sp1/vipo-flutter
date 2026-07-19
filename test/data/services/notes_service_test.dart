@@ -139,4 +139,70 @@ void main() {
           throwsA(isA<FormatException>()));
     });
   });
+
+  group('NotesService error propagation (DioException surfaces unswallowed)',
+      () {
+    DioException dioErr({int? statusCode}) {
+      final response = statusCode == null
+          ? null
+          : Response<void>(
+              requestOptions: RequestOptions(path: '/notes'),
+              statusCode: statusCode,
+            );
+      return DioException(
+        requestOptions: RequestOptions(path: '/notes'),
+        response: response,
+        type: DioExceptionType.badResponse,
+        message: 'boom',
+      );
+    }
+
+    test('createNote propagates DioException from NotesApi.createNote',
+        () async {
+      when(() =>
+              mockApi.createNote(createNoteRequest: any(named: 'createNoteRequest')))
+          .thenThrow(dioErr(statusCode: 500));
+
+      final input = Note(id: '0', content: 'hello', createdAt: ts);
+
+      await expectLater(
+        service.createNote(input, TimerMode.work),
+        throwsA(isA<DioException>()),
+      );
+    });
+
+    test('getNotes propagates DioException from NotesApi.listNotes', () async {
+      when(() => mockApi.listNotes()).thenThrow(dioErr(statusCode: 502));
+
+      await expectLater(
+        service.getNotes(),
+        throwsA(isA<DioException>()
+            .having((e) => e.response?.statusCode, 'statusCode', 502)),
+      );
+    });
+
+    test('getNoteById propagates DioException from NotesApi.getNote', () async {
+      when(() => mockApi.getNote(id: any(named: 'id')))
+          .thenThrow(dioErr(statusCode: 404));
+
+      await expectLater(
+        service.getNoteById('7'),
+        throwsA(isA<DioException>()
+            .having((e) => e.response?.statusCode, 'statusCode', 404)),
+      );
+      verify(() => mockApi.getNote(id: 7)).called(1);
+    });
+
+    test('deleteNote propagates DioException from NotesApi.deleteNote',
+        () async {
+      when(() => mockApi.deleteNote(id: any(named: 'id')))
+          .thenThrow(dioErr(statusCode: 500));
+
+      await expectLater(
+        service.deleteNote('5'),
+        throwsA(isA<DioException>()),
+      );
+      verify(() => mockApi.deleteNote(id: 5)).called(1);
+    });
+  });
 }
