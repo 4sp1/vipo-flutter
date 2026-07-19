@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:vipo/blocs/logs/logs_bloc.dart';
@@ -197,5 +198,33 @@ void main() {
             )).called(1);
       },
     );
+
+    test('cancels the ticker StreamSubscription on close', () {
+      fakeAsync((async) {
+        final bloc = TimerBloc(logsBloc);
+
+        bloc.add(TimerStarted(TimerMode.work));
+        async.flushMicrotasks();
+
+        final states = <st.TimerState>[];
+        final sub = bloc.stream.listen(states.add);
+        async.elapse(const Duration(seconds: 2));
+        async.flushMicrotasks();
+
+        expect(states.whereType<st.TimerRunInProgress>(), isNotEmpty);
+
+        bloc.close();
+        async.flushMicrotasks();
+
+        final countBefore = states.length;
+        async.elapse(const Duration(seconds: 40));
+        async.flushMicrotasks();
+
+        expect(states.length, countBefore);
+        expect(states.whereType<st.TimerComplete>(), isEmpty);
+
+        sub.cancel();
+      });
+    });
   });
 }
