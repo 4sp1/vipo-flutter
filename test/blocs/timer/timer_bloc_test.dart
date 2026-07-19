@@ -178,5 +178,24 @@ void main() {
             )).called(1);
       },
     );
+
+    blocTest<TimerBloc, st.TimerState>(
+      'emits [TimerComplete] on TimerCompleted and dispatches LogCreated(expire)',
+      build: () => TimerBloc(logsBloc),
+      seed: () => st.TimerRunInProgress(TimerMode.work, 500),
+      act: (bloc) => bloc.add(const TimerCompleted()),
+      expect: () => [st.TimerComplete(TimerMode.work)],
+      verify: (_) {
+        verify(() => mockLogsRepository.createLog(
+              any(
+                that: isA<LogEntry>().having(
+                  (e) => e.action,
+                  'action',
+                  LogAction.expire,
+                ),
+              ),
+            )).called(1);
+      },
+    );
   });
 }
