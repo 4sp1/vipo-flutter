@@ -109,4 +109,55 @@ void main() {
       expect(result, isEmpty);
     });
   });
+
+  group('LogsService error propagation (DioException surfaces unswallowed)', () {
+    DioException dioErr({int? statusCode}) {
+      final response = statusCode == null
+          ? null
+          : Response<void>(
+              requestOptions: RequestOptions(path: '/log'),
+              statusCode: statusCode,
+            );
+      return DioException(
+        requestOptions: RequestOptions(path: '/log'),
+        response: response,
+        type: DioExceptionType.badResponse,
+        message: 'boom',
+      );
+    }
+
+    test('createLog propagates DioException from LogsApi.createLogEntry',
+        () async {
+      when(() => mockApi.createLogEntry(
+              createLogEntryRequest: any(named: 'createLogEntryRequest')))
+          .thenThrow(dioErr(statusCode: 500));
+
+      final input = LogEntry(
+        id: '0',
+        pomodoroState: TimerMode.work,
+        action: LogAction.start,
+        createdAt: ts,
+      );
+
+      await expectLater(
+        service.createLog(input),
+        throwsA(isA<DioException>()),
+      );
+      verify(() => mockApi.createLogEntry(
+              createLogEntryRequest: any(named: 'createLogEntryRequest')))
+          .called(1);
+    });
+
+    test('getLogs propagates DioException from LogsApi.listLogEntries',
+        () async {
+      when(() => mockApi.listLogEntries()).thenThrow(dioErr(statusCode: 503));
+
+      await expectLater(
+        service.getLogs(),
+        throwsA(isA<DioException>()
+            .having((e) => e.response?.statusCode, 'statusCode', 503)),
+      );
+      verify(() => mockApi.listLogEntries()).called(1);
+    });
+  });
 }
