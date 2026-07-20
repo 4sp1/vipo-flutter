@@ -32,7 +32,7 @@ main.dart           → VipoApp (StatelessWidget, CupertinoApp, dark theme)
                                 ├─ TimerScreen (StatelessWidget — BlocBuilder/BlocSelector/BlocListener only)
                                 │    ├─ DonutTimer (unchanged)
                                 │    └─ ModeSwitch (unchanged)
-                                └─ NotesScreen (StatefulWidget — BlocBuilder; initState issues NotesFetchRequested)
+                                └─ NotesScreen (StatelessWidget — BlocBuilder only; NotesBloc self-dispatches the initial fetch on construction)
 di.dart             → AppDeps — wires Dio → generated LogsApi/NotesApi → services → repositories → BLoCs (constructor DI, no service locator)
 data/
   api/                      → Generated OpenAPI client (dart-dio) — NEVER hand-edit
@@ -61,7 +61,7 @@ blocs/
   notes/                   → NotesBloc, NotesEvent, NotesState
 screens/
   timer_screen.dart        → StatelessWidget — BlocBuilder/BlocSelector/BlocListener, no setState
-  notes_screen.dart        → StatefulWidget — BlocBuilder; initState dispatches NotesFetchRequested; push from TimerScreen
+  notes_screen.dart        → StatelessWidget — BlocBuilder only; NotesBloc self-dispatches NotesFetchRequested from its constructor; push from TimerScreen
 widgets/
   donut_timer.dart         → Unchanged
   mode_switch.dart         → Unchanged
@@ -84,6 +84,7 @@ notifications.dart   → Module-level notifications plugin + init/show helpers (
 - **Constructor DI**: All BLoCs and services receive dependencies via constructor — there is no `get_it`, no service locator, and no `context.read<>()` inside BLoCs. `context.read` is used only inside widget event handlers (e.g. `NotesScreen._showAddNoteDialog`) to obtain an already-provided BLoC. The entire dependency graph is built in `AppDeps` (`lib/di.dart`) in a single constructor: `Dio` → `LogsApi`/`NotesApi` (generated) → `LogsService`/`NotesService` → `LogsRepository`/`NotesRepository` → `LogsBloc` → `TimerBloc`, then `NotesBloc`.
 - **TimerMode enum**: Enhanced enum with fields (`duration`, `label`, `color`). Color is `CupertinoDynamicColor` — must be resolved with `CupertinoDynamicColor.resolve()` before passing to `_DonutPainter`.
 - **flutter_animate**: Used via `.animate()` chain on `CustomPaint` in `DonutTimer`. Animations are simple fade+scale on build, not state-driven.
+- **NotesBloc self-dispatches the initial fetch**: `NotesBloc`'s constructor registers all `on<Event>` handlers, then calls `add(NotesFetchRequested())` as its last statement. BLoCs own their initial state transitions — no view primes them. This mirrors `TimerBloc`'s self-contained `TimerInitial(work)` initial state. `AppDeps` accepts an optional `NotesRepository?` test-seam so smoke tests can inject a mock repository (the constructor-time fetch would otherwise hit the network).
 - **Notification initialization**: `main()` calls `notifications.initialize()` before `runApp()`. Platform-specific permission requests for macOS and iOS are in `notifications.dart`.
 - **Vibration**: Uses the `vibration` package; guarded by `Vibration.hasVibrator()` check (macOS doesn't vibrate).
 - **Generated code is off-limits**: Files under `lib/data/api/` are auto-generated from `tooling/openapi.json`. Never hand-edit them — even small fixes. Re-run `./tooling/generate_api.sh` instead (see the **Generated API Client** section below).
@@ -108,7 +109,7 @@ notifications.dart   → Module-level notifications plugin + init/show helpers (
 - **Single notification ID**: `notifications.show()` always uses `id: 0`, so each new notification replaces the previous one.
 - **Debug print in notifications**: `notifications.dart` uses `print()` for debug logging (initialization status, errors). These would trigger the `avoid_print` lint if enabled — it is not.
 - **Timer ticker is a `StreamSubscription`**: `TimerBloc` cancels its ticker `StreamSubscription` on `close()` and on every `_startTicker` call. Tests that pump multiple `TimerStarted` events don't leak subscriptions.
-- **NotesScreen is a StatefulWidget** (not a `StatelessWidget`): the `_NotesScreenState.initState` dispatches `NotesFetchRequested` once. The push from `TimerScreen` is a plain `CupertinoPageRoute`, not a named route — there is no router in this app.
+- **NotesScreen is a `StatelessWidget`** (converted in #41): it no longer dispatches `NotesFetchRequested` from `initState` — `NotesBloc` self-dispatches the fetch from its constructor (after all `on<Event>` handlers are registered), so no view primes it. The push from `TimerScreen` is a plain `CupertinoPageRoute`, not a named route — there is no router in this app.
 
 ## Project Structure Conventions
 
