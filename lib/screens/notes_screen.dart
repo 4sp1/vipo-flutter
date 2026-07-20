@@ -5,19 +5,14 @@ import 'package:vipo/blocs/notes/notes_event.dart';
 import 'package:vipo/blocs/notes/notes_state.dart';
 import 'package:vipo/blocs/timer/timer_bloc.dart';
 
-class NotesScreen extends StatefulWidget {
+/// Pure view for the notes list.
+///
+/// Owns no state. Reads notes state from the ambient [NotesBloc] (provided in
+/// `main.dart` via [AppDeps]) and dispatches user interactions back to it via
+/// [BlocBuilder]. The initial fetch is self-dispatched by [NotesBloc]'s
+/// constructor — no view priming is needed.
+class NotesScreen extends StatelessWidget {
   const NotesScreen({super.key});
-
-  @override
-  State<NotesScreen> createState() => _NotesScreenState();
-}
-
-class _NotesScreenState extends State<NotesScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<NotesBloc>().add(NotesFetchRequested());
-  }
 
   void _showAddNoteDialog(BuildContext context) {
     final timerMode = context.read<TimerBloc>().state.mode;

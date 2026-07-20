@@ -56,16 +56,24 @@ void main() {
     timerBloc = TimerBloc(logsBloc);
 
     mockNotesRepository = MockNotesRepository();
+    // Default stub used by any test that does not override getNotes().
     when(() => mockNotesRepository.getNotes())
         .thenAnswer((_) async => Result.success(<Note>[]));
-    notesBloc = NotesBloc(mockNotesRepository);
 
     addTearDown(() async {
-      await notesBloc.close();
-      await timerBloc.close();
       await logsBloc.close();
+      await timerBloc.close();
     });
   });
+
+  /// Constructs a [NotesBloc] against [mockNotesRepository] and registers
+  /// tear-down to close it. Callers MUST set any `getNotes()` / `createNote()`
+  /// / `deleteNote()` stubs BEFORE calling this, because [NotesBloc]
+  /// self-dispatches the initial fetch in its constructor (issue #41).
+  void makeNotesBloc() {
+    notesBloc = NotesBloc(mockNotesRepository);
+    addTearDown(() async => await notesBloc.close());
+  }
 
   Widget pumpSubject() {
     return CupertinoApp(
@@ -79,12 +87,12 @@ void main() {
     );
   }
 
-  testWidgets(
-      'shows CupertinoActivityIndicator while notes are loading',
+  testWidgets('shows CupertinoActivityIndicator while notes are loading',
       (tester) async {
     final completer = Completer<Result<List<Note>>>();
     when(() => mockNotesRepository.getNotes())
         .thenAnswer((_) async => await completer.future);
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.pump();
@@ -99,6 +107,7 @@ void main() {
   testWidgets('shows notes list on load success', (tester) async {
     when(() => mockNotesRepository.getNotes())
         .thenAnswer((_) async => Result.success([testNote]));
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -112,8 +121,7 @@ void main() {
 
   testWidgets('shows empty-state message when notes list is empty',
       (tester) async {
-    when(() => mockNotesRepository.getNotes())
-        .thenAnswer((_) async => Result.success(<Note>[]));
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -130,6 +138,7 @@ void main() {
     when(() => mockNotesRepository.getNotes()).thenAnswer(
       (_) async => Result.failure(NoteRetrievalFailure('badGateway')),
     );
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -153,6 +162,7 @@ void main() {
       }
       return Result.success(<Note>[]);
     });
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -176,10 +186,9 @@ void main() {
   testWidgets(
       'tapping + shows dialog, entering text, tapping Add dispatches NoteCreated',
       (tester) async {
-    when(() => mockNotesRepository.getNotes())
-        .thenAnswer((_) async => Result.success(<Note>[]));
     when(() => mockNotesRepository.createNote(any(), any()))
         .thenAnswer((_) async => Result.success(testNote));
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -210,8 +219,7 @@ void main() {
   testWidgets(
       'tapping Cancel in the add note dialog does not create a note',
       (tester) async {
-    when(() => mockNotesRepository.getNotes())
-        .thenAnswer((_) async => Result.success(<Note>[]));
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -240,6 +248,7 @@ void main() {
         .thenAnswer((_) async => Result.success([testNote]));
     when(() => mockNotesRepository.deleteNote(any()))
         .thenAnswer((_) async => Result<void>.success(null));
+    makeNotesBloc();
 
     await tester.pumpWidget(pumpSubject());
     await tester.runAsync(() async {
@@ -250,7 +259,6 @@ void main() {
 
     expect(find.text('hello'), findsOneWidget);
 
-    // Dispatch NoteDeleted directly (simulates swipe-to-delete gesture)
     notesBloc.add(NoteDeleted('1'));
     await tester.runAsync(() async {
       await Future<void>.delayed(const Duration(milliseconds: 50));
