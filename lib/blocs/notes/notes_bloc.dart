@@ -10,6 +10,11 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     on<NotesFetchRequested>(_onFetchRequested);
     on<NoteCreated>(_onNoteCreated);
     on<NoteDeleted>(_onNoteDeleted);
+
+    // Self-dispatch the initial load so no view has to prime the BLoC.
+    // Must come AFTER every on<...> handler is registered so the event has
+    // a handler. Mirrors TimerBloc's self-contained initial state.
+    add(NotesFetchRequested());
   }
 
   final NotesRepository _notesRepository;
