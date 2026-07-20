@@ -20,7 +20,12 @@ import 'package:vipo/repositories/notes_repository.dart';
 /// `main.dart` constructs one `AppDeps` and feeds the pre-built repositories
 /// and BLoCs into `MultiRepositoryProvider` / `MultiBlocProvider`.
 class AppDeps {
-  AppDeps() {
+  /// [notesRepository] is a test-only seam: when non-null it replaces the
+  /// real `NotesRepository` so the `NotesBloc` constructor-time fetch
+  /// (issue #41) does not hit the network in smoke tests. Production callers
+  /// pass nothing and get the full `Dio` → `NotesApi` → `NotesService` →
+  /// `NotesRepository` chain.
+  AppDeps({NotesRepository? notesRepository}) {
     final dio = Dio(BaseOptions(
       baseUrl: kApiBaseUrl,
       connectTimeout: const Duration(milliseconds: 5000),
@@ -35,7 +40,7 @@ class AppDeps {
     _notesService = NotesService(notesApi);
 
     _logsRepository = LogsRepository(_logsService);
-    _notesRepository = NotesRepository(_notesService);
+    _notesRepository = notesRepository ?? NotesRepository(_notesService);
 
     _logsBloc = LogsBloc(_logsRepository);
     _timerBloc = TimerBloc(_logsBloc);

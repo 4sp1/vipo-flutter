@@ -1,17 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:vipo/blocs/logs/logs_bloc.dart';
 import 'package:vipo/blocs/notes/notes_bloc.dart';
 import 'package:vipo/blocs/timer/timer_bloc.dart';
 import 'package:vipo/di.dart';
+import 'package:vipo/domain/models/note.dart';
+import 'package:vipo/domain/result.dart';
 import 'package:vipo/repositories/logs_repository.dart';
 import 'package:vipo/repositories/notes_repository.dart';
 
+class _MockNotesRepository extends Mock implements NotesRepository {}
+
 void main() {
   group('AppDeps', () {
+    late _MockNotesRepository notesRepository;
     late AppDeps deps;
 
     setUp(() {
-      deps = AppDeps();
+      notesRepository = _MockNotesRepository();
+      when(() => notesRepository.getNotes())
+          .thenAnswer((_) async => Result.success(<Note>[]));
+      deps = AppDeps(notesRepository: notesRepository);
     });
 
     tearDown(() async {
