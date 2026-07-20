@@ -20,7 +20,6 @@ void main() {
         .thenAnswer((_) async => Result.success(<Note>[]));
 
     final deps = AppDeps(notesRepository: notesRepository);
-    addTearDown(() async => await deps.dispose());
 
     await tester.pumpWidget(VipoApp(deps: deps));
     await tester.pump(const Duration(milliseconds: 500));
