@@ -40,11 +40,11 @@ data/
   api_client.dart          → buildApiClient() helper — single entry point for tests/services
   services/
     logs_service.dart      → Thin wrapper over generated LogsApi
-    notes_service.dart     → Thin wrapper over generated NotesApi
+    notes_service.dart     → Thin wrapper over generated NotesApi (create, list, getById, delete)
 domain/
   models/
     timer_mode.dart        → TimerMode enum (work, shortBreak, longBreak)
-    log_action.dart        → LogAction enum (start, pause, resume, complete, switch_mode, reset)
+    log_action.dart        → LogAction enum (start, pause, resume, reset, expire, select)
     log_entry.dart         → LogEntry domain model
     note.dart              → Note domain model
   mappers/
@@ -54,14 +54,14 @@ domain/
   result.dart              → Result<T> sealed class (Success / Failure) + domain failure exceptions
 repositories/
   logs_repository.dart     → Source of truth for logs; returns Result<T>
-  notes_repository.dart    → Source of truth for notes; returns Result<T>
+  notes_repository.dart    → Source of truth for notes (getNotes, getNoteById, createNote, deleteNote); returns Result<T>
 blocs/
   timer/                   → TimerBloc, TimerEvent, TimerState (owns the 1-second ticker StreamSubscription)
   logs/                    → LogsBloc, LogsEvent, LogsState
   notes/                   → NotesBloc, NotesEvent, NotesState
 screens/
   timer_screen.dart        → StatelessWidget — BlocBuilder/BlocSelector/BlocListener, no setState
-  notes_screen.dart        → StatelessWidget — BlocBuilder only; NotesBloc self-dispatches NotesFetchRequested from its constructor; push from TimerScreen
+  notes_screen.dart        → StatelessWidget — BlocBuilder only; NotesBloc self-dispatches NotesFetchRequested from its constructor; swipe-to-delete via Dismissible dispatches NoteDeleted; push from TimerScreen
 widgets/
   donut_timer.dart         → Unchanged
   mode_switch.dart         → Unchanged
@@ -71,8 +71,8 @@ notifications.dart   → Module-level notifications plugin + init/show helpers (
 ## Data flow
 
 - **Unidirectional**: UI → Event → BLoC → State → UI. The screens dispatch `*Event`s; BLoCs own the state transitions and emit `*State`s; the screens rebuild via `BlocBuilder`/`BlocSelector`. No screen holds business state in `setState`.
-- **BLoC-to-BLoC**: `TimerBloc` is constructed with `LogsBloc` as a dependency (`TimerBloc(this._logsBloc)` in `di.dart`). On `TimerStarted`/`TimerPaused`/`TimerCompleted`/`TimerModeChanged` it dispatches `LogCreated` events to the shared `LogsBloc` (fire-and-forget). `LogsBloc` is created **before** `TimerBloc` in `AppDeps` for this reason.
-- **Error boundary**: Repositories return `Result.success(value)` or `Result.failure(exception)`. BLoCs `switch` on the `Result` and emit corresponding states (`*LoadFailure`, etc.). `DioException` is normalized into a domain failure (`LogCreateFailure`, `LogRetrievalFailure`, `NoteCreateFailure`, `NoteRetrievalFailure`) inside the repository layer; no BLoC ever imports `package:dio/dio.dart`.
+- **BLoC-to-BLoC**: `TimerBloc` is constructed with `LogsBloc` as a dependency (`TimerBloc(this._logsBloc)` in `di.dart`). On every user-timer event — `TimerStarted` (start), `TimerPaused` (pause), `TimerResumed` (resume), `TimerReset` (reset), `TimerModeChanged` (select), and `TimerCompleted` (expire) — it fire-and-forget dispatches a `LogCreated` event (carrying the matching `LogAction`) to the shared `LogsBloc`. `LogsBloc` is created **before** `TimerBloc` in `AppDeps` for this reason.
+- **Error boundary**: Repositories return `Result.success(value)` or `Result.failure(exception)`. BLoCs `switch` on the `Result` and emit corresponding states (`*LoadFailure`, etc.). `DioException` is normalized into a domain failure (`LogCreateFailure`, `LogRetrievalFailure`, `NoteCreateFailure`, `NoteRetrievalFailure`) inside the repository layer; no BLoC ever imports `package:dio/dio.dart`. For id-taking note methods (`getNoteById`, `deleteNote`) a `FormatException` from a non-numeric id is likewise normalized to `NoteRetrievalFailure`; `NoteRetrievalFailure` covers both read and delete failures (there is no dedicated `NoteDeleteFailure`).
 - **Platform side effects**: Vibration + local notification fire once on `TimerComplete`, in `TimerScreen`'s `BlocListener`. BLoCs do not import `vibration` or `flutter_local_notifications`.
 
 ## Key Patterns & Conventions
@@ -97,6 +97,7 @@ notifications.dart   → Module-level notifications plugin + init/show helpers (
 - **Service tests** (`test/data/services/`): mock the generated `LogsApi`/`NotesApi`, verify delegation and API↔domain mapping round-trips for every enum case.
 - **Mapper tests** (`test/domain/`): round-trip tests covering every `TimerMode` ↔ `PomodoroState` pair and every `LogAction` × `TimerMode` combination for `log_entry_mapper.dart`; full `Note` ↔ API `Note` for `note_mapper.dart`.
 - **Model tests**: `log_entry_model_test.dart`, `note_model_test.dart`, `log_action_test.dart`, `timer_mode_test.dart`, `result_test.dart` (sealed switch + the four domain failure exceptions).
+- **Screen tests** (`test/screens/`): `timer_screen_test.dart` and `notes_screen_test.dart` pump the respective screen with `mocktail`-mocked repositories + real BLoCs (`MockLogsRepository`/`MockNotesRepository`). They assert rendering (initial countdown, empty/error states), user-interaction dispatch (tap-to-start, mode switch, add-note dialog, swipe-to-delete → `NoteDeleted`), and the `TimerScreen` → `NotesScreen` push.
 - **Smoke tests**: `test/widget_test.dart` pumps `VipoApp(deps: AppDeps())` and asserts `TimerScreen` renders. `test/data/api_smoke_test.dart` constructs a `VipoApi` without making a network call. `test/di_test.dart` asserts `AppDeps` builds the full graph and exposes every getter.
 - **No real HTTP**: every unit test mocks the layer below. Only smoke tests instantiate `AppDeps` or `VipoApi`, and none make network calls.
 - Run: `flutter test`
@@ -104,12 +105,12 @@ notifications.dart   → Module-level notifications plugin + init/show helpers (
 ## Gotchas
 
 - **Generated code**: Never edit `lib/data/api/`. Regenerate via `./tooling/generate_api.sh`. The only hand-authored file in that tree is `.openapi-generator-ignore`.
-- **No Android support**: Only `ios/` and `macos/` platform directories exist. No `android/` folder. The pubspec has `flutter_launcher_icons` configured for iOS/macOS/Web/Windows but not Android.
+- **No Android support**: Platform directories are `ios/`, `macos/`, and `web/` — there is no `android/` folder. The pubspec has `flutter_launcher_icons` configured for iOS/macOS/Web/Windows but not Android.
 - **State is ephemeral**: No local persistence. Timer state lives in `TimerBloc`'s in-memory state; it is lost on hot restart or app close.
 - **Single notification ID**: `notifications.show()` always uses `id: 0`, so each new notification replaces the previous one.
 - **Debug print in notifications**: `notifications.dart` uses `print()` for debug logging (initialization status, errors). These would trigger the `avoid_print` lint if enabled — it is not.
 - **Timer ticker is a `StreamSubscription`**: `TimerBloc` cancels its ticker `StreamSubscription` on `close()` and on every `_startTicker` call. Tests that pump multiple `TimerStarted` events don't leak subscriptions.
-- **NotesScreen is a `StatelessWidget`** (converted in #41): it no longer dispatches `NotesFetchRequested` from `initState` — `NotesBloc` self-dispatches the fetch from its constructor (after all `on<Event>` handlers are registered), so no view primes it. The push from `TimerScreen` is a plain `CupertinoPageRoute`, not a named route — there is no router in this app.
+- **NotesScreen is a `StatelessWidget`** (converted in #41): it no longer dispatches `NotesFetchRequested` from `initState` — `NotesBloc` self-dispatches the fetch from its constructor (after all `on<Event>` handlers are registered, including `NoteCreated` and `NoteDeleted`), so no view primes it. Note deletion is view-initiated: swiping a row's `Dismissible` dispatches `NoteDeleted(id)`, which the BLoC forwards to `NotesRepository.deleteNote`. The push from `TimerScreen` is a plain `CupertinoPageRoute`, not a named route — there is no router in this app.
 
 ## Project Structure Conventions
 
@@ -125,6 +126,7 @@ notifications.dart   → Module-level notifications plugin + init/show helpers (
 - Dependency wiring lives in `lib/di.dart` (`AppDeps`)
 - No routing, no service locator — `MultiRepositoryProvider` + `MultiBlocProvider` in `main.dart`
 - Icon asset: `assets/icon/icon.png` (source) → generated via `flutter_launcher_icons`
+- Implementation plans live in `docs/plans/` (timestamped Markdown, one per feature/PR)
 
 ## Generated API Client (`lib/data/api/`)
 
