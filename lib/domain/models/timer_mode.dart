@@ -12,7 +12,7 @@ enum TimerMode {
     color: CupertinoColors.systemGreen,
   ),
   longBreak(
-    duration: Duration(minutes: 15),
+    duration: Duration(minutes: 30),
     label: 'Long Break',
     color: CupertinoColors.systemBlue,
   );
